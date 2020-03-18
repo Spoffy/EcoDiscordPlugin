@@ -26,7 +26,7 @@ namespace Eco.Plugins.DiscordLink
     public class DiscordLink : IModKitPlugin, IInitializablePlugin, IConfigurablePlugin
     {
         protected string NametagColor = "7289DAFF";
-        private PluginConfig<DiscordConfig> configOptions;
+        private PluginConfig<DiscordConfig> _configOptions;
         private DiscordClient _discordClient;
         private CommandsNextModule _commands;
         private string _currentToken;
@@ -46,7 +46,7 @@ namespace Eco.Plugins.DiscordLink
 
         public IPluginConfig PluginConfig
         {
-            get { return configOptions; }
+            get { return _configOptions; }
         }
 
         public DiscordConfig DiscordPluginConfig
@@ -80,7 +80,7 @@ namespace Eco.Plugins.DiscordLink
             SetupConfig();
             chatNotifier = new ChatNotifier(new IChatMessageProviderChatServerWrapper());
             SetUpClient();
-            if(configOptions.Config.LogChat)
+            if(_configOptions.Config.LogChat)
             {
                 StartChatlog();
             }
@@ -88,7 +88,7 @@ namespace Eco.Plugins.DiscordLink
 
         ~DiscordLink()
         {
-            if (configOptions.Config.LogChat)
+            if (_configOptions.Config.LogChat)
             {
                 StopChatlog();
             }
@@ -96,7 +96,7 @@ namespace Eco.Plugins.DiscordLink
 
         private void SetupConfig()
         {
-            configOptions = new PluginConfig<DiscordConfig>("DiscordPluginSpoffy");
+            _configOptions = new PluginConfig<DiscordConfig>("DiscordPluginSpoffy");
             DiscordPluginConfig.ChannelLinks.CollectionChanged += (obj, args) => { SaveConfig(); };
         }
 
@@ -428,7 +428,7 @@ namespace Eco.Plugins.DiscordLink
 
         public object GetEditObject()
         {
-            return configOptions.Config;
+            return _configOptions.Config;
         }
 
         public void OnEditObjectChanged(object o, string param)
@@ -439,7 +439,7 @@ namespace Eco.Plugins.DiscordLink
         protected void SaveConfig()
         {
             Logger.DebugVerbose("Saving Config");
-            configOptions.Save();
+            _configOptions.Save();
             if (DiscordPluginConfig.BotToken != _currentToken)
             {
                 //Reinitialise client.
@@ -477,7 +477,7 @@ namespace Eco.Plugins.DiscordLink
 
         public void SavePlayerConfig()
         {
-            configOptions.Save();
+            _configOptions.Save();
         }
 
         public DiscordChannel GetDefaultChannelForPlayer(string identifier)
@@ -511,13 +511,13 @@ namespace Eco.Plugins.DiscordLink
         {
             try
             {
-                _chatLogWriter = new StreamWriter(configOptions.Config.ChatlogPath, append: true);
+                _chatLogWriter = new StreamWriter(_configOptions.Config.ChatlogPath, append: true);
                 _chatLogWriter.AutoFlush = true;
                 _chatlogInitialized = true;
             }
             catch(Exception)
             {
-                Logger.Error("Failed to initialize chat logger using path \"" + configOptions.Config.ChatlogPath + "\"");
+                Logger.Error("Failed to initialize chat logger using path \"" + _configOptions.Config.ChatlogPath + "\"");
             }
         }
 
