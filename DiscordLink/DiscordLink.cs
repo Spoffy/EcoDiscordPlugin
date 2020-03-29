@@ -34,6 +34,8 @@ namespace Eco.Plugins.DiscordLink
         private string _status = "No Connection Attempt Made";
         private StreamWriter _chatLogWriter;
 
+        public const string DiscordInviteLinkToken = "[LINK]";
+
         private const string CommandPrefix = "?";
 
         private static readonly Regex TagStripRegex = new Regex("<[^>]*>");
@@ -272,7 +274,8 @@ namespace Eco.Plugins.DiscordLink
         private User _ecoUser;
         private bool _relayInitialised = false;
 
-        protected User EcoUser =>
+        private User _ecoUser;
+        public User EcoUser =>
             _ecoUser ?? (_ecoUser = UserManager.GetOrCreateUser(EcoUserSteamId, EcoUserSlgId, EcoUserName));
 
         private void BeginRelaying()
@@ -467,6 +470,16 @@ namespace Eco.Plugins.DiscordLink
                 RestartChatlog();
             }
 
+            if(string.IsNullOrWhiteSpace(_configOptions.Config.EcoCommandChannel))
+            {
+                _configOptions.Config.EcoCommandChannel = DiscordConfig.Defaults.EcoCommandChannel;
+            }
+
+            if (string.IsNullOrWhiteSpace(_configOptions.Config.InviteMessage))
+            {
+                _configOptions.Config.InviteMessage = DiscordConfig.Defaults.InviteMessage;
+            }
+
             _prevConfigOptions = (DiscordConfig)_configOptions.Config.Clone();
         }
 
@@ -560,6 +573,12 @@ namespace Eco.Plugins.DiscordLink
 
     public class DiscordConfig : ICloneable
     {
+        public static class Defaults
+        {
+            public const string EcoCommandChannel = "General";
+            public const string InviteMessage = "Join us on Discord!\n" + DiscordLink.DiscordInviteLinkToken;
+        }
+
         public object Clone() // Be careful not to change the original object here as that will trigger endless recursion.
         {
             return new DiscordConfig
@@ -572,6 +591,8 @@ namespace Eco.Plugins.DiscordLink
                 Debug = this.Debug,
                 LogChat = this.LogChat,
                 ChatlogPath = this.ChatlogPath,
+                EcoCommandChannel = this.EcoCommandChannel,
+                InviteMessage = this.InviteMessage,
                 PlayerConfigs = this.PlayerConfigs.Select(t => t.Clone()).Cast<DiscordPlayerConfig>().ToList(),
                 ChannelLinks = new ObservableCollection<ChannelLink>(this.ChannelLinks.Select(t => t.Clone()).Cast<ChannelLink>())
             };
@@ -618,6 +639,12 @@ namespace Eco.Plugins.DiscordLink
 
         [Description("The path to the chatlog file, including file name and extension. This setting can be changed while the server is running, but the existing chatlog will not transfer."), Category("Chatlog Configuration")]
         public string ChatlogPath { get; set; } = Directory.GetCurrentDirectory() + "\\Logs\\DiscordLinkChatlog.txt";
+
+        [Description("The Eco chat channel to use for commands that outputs public messages. This setting can be changed while the server is running."), Category("Command Settings")]
+        public string EcoCommandChannel { get; set; } = Defaults.EcoCommandChannel;
+
+        [Description("The message to use for the /DiscordInvite command. The invite link is fetched from the network config and will replace the token " + DiscordLink.DiscordInviteLinkToken + ". This setting can be changed while the server is running."), Category("Command Settings")]
+        public string InviteMessage { get; set; } = Defaults.InviteMessage;
     }
 
     public class DiscordPlayerConfig : ICloneable

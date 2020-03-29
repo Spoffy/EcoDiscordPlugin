@@ -1,9 +1,11 @@
 using System;
 using System.Runtime.Remoting.Messaging;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Eco.Gameplay.Players;
 using Eco.Gameplay.Stats;
 using Eco.Gameplay.Systems.Chat;
+using Eco.Plugins.Networking;
 using Eco.Shared.Localization;
 using Eco.Shared.Utils;
 
@@ -136,6 +138,39 @@ namespace Eco.Plugins.DiscordLink
                     ChatManager.ServerMessageToPlayer(new LocString("Default channel set to " + channelName), user);
                 },
                 user);
+        }
+
+        [ChatCommand("Display the discord invitation message.", ChatAuthorizationLevel.Moderator)]
+        public static void DiscordInvite(User user)
+        {
+            CallWithErrorHandling<object>((lUser, args) =>
+            {
+                string sendText;
+
+                var plugin = DiscordLink.Obj;
+                if (plugin == null) return;
+
+                // Notify the caller if the command failed
+                var serverInfo = NetworkManager.GetServerInfo();
+                if(String.IsNullOrEmpty(serverInfo.DiscordAddress)) 
+                {
+                    sendText = $"@{user.Name} {"Failed to send Discord invite message as the Discord invite link has not been configured for this server."}";
+                    ChatManager.SendChat(sendText, plugin.EcoUser);
+                    return;
+                }
+
+                var config = (DiscordConfig)plugin.GetEditObject();
+                string rawMessage = config.InviteMessage;
+                string processedMessage = Regex.Replace(rawMessage, "(?i)" + Regex.Escape(DiscordLink.DiscordInviteLinkToken) + "(?-i)", serverInfo.DiscordAddress, RegexOptions.IgnoreCase );
+                if(processedMessage == rawMessage) // If no token was found, append the invite link to the end of the message
+                {
+                    processedMessage += "\n" + serverInfo.DiscordAddress;
+                }
+
+                sendText = $"#{config.EcoCommandChannel} {processedMessage}";
+                ChatManager.SendChat(sendText, plugin.EcoUser);
+            },
+            user);
         }
     }
 }
