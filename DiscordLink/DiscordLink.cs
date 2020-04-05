@@ -37,8 +37,7 @@ namespace Eco.Plugins.DiscordLink
         private string _status = "No Connection Attempt Made";
         private StreamWriter _chatLogWriter;
 
-
-        private static readonly Regex TagStripRegex = new Regex("<[^>]*>");
+        private static readonly Regex TagStripRegex = new Regex("<[^>]*>"); // Strips the tags used by Eco message formatting (color codes, badges, links etc)
 
         protected ChatNotifier chatNotifier;
 
@@ -231,7 +230,7 @@ namespace Eco.Plugins.DiscordLink
 
         #region Message Sending
 
-        public async Task<string> SendMessage(string message, string channelNameOrId, string guildNameOrId)
+        public async Task<string> SendDiscordMessage(string message, string channelNameOrId, string guildNameOrId)
         {
             if (_discordClient == null) return "No discord client";
 
@@ -239,15 +238,10 @@ namespace Eco.Plugins.DiscordLink
             if (guild == null) return "No guild of that name found";
 
             var channel = guild.ChannelByNameOrId(channelNameOrId);
-            return await SendMessage(message, channel);
+            return await SendDiscordMessage(message, channel);
         }
 
-        private string FormatMessageFromUsername(string message, string username)
-        {
-            return $"**{username}**: {StripTags(message)}";
-        }
-
-        public async Task<string> SendMessage(string message, DiscordChannel channel)
+        public async Task<string> SendDiscordMessage(string message, DiscordChannel channel)
         {
             if (_discordClient == null) return "No discord client";
             if (channel == null) return "No channel of that name or ID found in that guild";
@@ -256,14 +250,19 @@ namespace Eco.Plugins.DiscordLink
             return "Message sent successfully!";
         }
 
-        public async Task<string> SendMessageAsUser(string message, User user, string channelName, string guildName)
+        public async Task<string> SendDiscordMessageAsUser(string message, User user, string channelNameOrId, string guildNameOrId)
         {
-            return await SendMessage(FormatMessageFromUsername(message, user.Name), channelName, guildName);
+            var guild = GuildByNameOrId(guildNameOrId);
+            if (guild == null) return "No guild of that name found";
+
+            var channel = guild.ChannelByNameOrId(channelNameOrId);
+            if (channel == null) return "No channel of that name or ID found in that guild";
+            return await SendDiscordMessage(FormatDiscordMessage(message, channel, user.Name), channel);
         }
 
-        public async Task<String> SendMessageAsUser(string message, User user, DiscordChannel channel)
+        public async Task<String> SendDiscordMessageAsUser(string message, User user, DiscordChannel channel)
         {
-            return await SendMessage(FormatMessageFromUsername(message, user.Name), channel);
+            return await SendDiscordMessage(FormatDiscordMessage(message, channel, user.Name), channel);
         }
 
         #endregion
@@ -387,10 +386,24 @@ namespace Eco.Plugins.DiscordLink
             }
         }
 
-        private void ForwardMessageToDiscordChannel(ChatMessage message, string channel, string guild)
+        private void ForwardMessageToDiscordChannel(ChatMessage message, string channelNameOrId, string guildNameOrId)
         {
             Logger.DebugVerbose("Sending Eco message to Discord");
-            SendMessage(FormatMessageFromUsername(message.Text, message.Sender), channel, guild);
+
+            var guild = GuildByNameOrId(guildNameOrId);
+            if (guild == null)
+            {
+                Logger.Error("Failed to forward Eco message from user " + StripTags(message.Sender) + " as no guild with the name or ID " + guildNameOrId + " exists");
+                return;
+            }
+            var channel = guild.ChannelByNameOrId(channelNameOrId);
+            if(channel == null)
+            {
+                Logger.Error("Failed to forward Eco message from user " + StripTags(message.Sender) + " as no channel with the name or ID " + channelNameOrId + " exists in the guild " + guild.Name);
+                return;
+            }
+
+            SendDiscordMessage(FormatDiscordMessage(message.Text, channel, message.Sender), channel);
 
             if (_chatlogInitialized)
             {
@@ -421,6 +434,53 @@ namespace Eco.Plugins.DiscordLink
                 content = content.Replace($"<#{channel.Id}>", $"#{channel.Name}");
             }
             return content;
+        }
+
+        #endregion
+
+        #region Message Formatting
+
+        public string FormatDiscordMessage(string message, DiscordChannel channel, string username = "" )
+        {
+            string formattedMessage = (username.IsEmpty() ? "" : $"**{username.Replace("@", "")}**:") + StripTags(message); // All @ characters are removed from the name in order to avoid unintended mentions of the sender
+            return FormatDiscordMentions(formattedMessage, channel);
+        }
+
+        private string FormatDiscordMentions(string message, DiscordChannel channel)
+        {
+            return Regex.Replace(message, "(@.+?)(?=(\\s|$|@))", match => // Mention matching regex: Match all characters followed by an @ character (including that character) until encountering any type of whitespace, end of string or a new @ character
+            {
+                string matchLower = match.ToString().Substring(1).ToLower(); // Strip the @ character from the match
+                foreach (var member in channel.Guild.Members)
+                {
+                    string memberNameLower = member.DisplayName.ToLower();
+                    if (matchLower.Contains(memberNameLower))
+                    {
+                        if (matchLower == memberNameLower)
+                        {
+                            return "<@" + member.Id + ">";
+                        }
+
+                        string beforeMatch = "";
+                        int matchStartIndex = matchLower.IndexOf(memberNameLower);
+                        if (matchStartIndex > 0) // There are characters before @username
+                        {
+                            beforeMatch = matchLower.Substring(0, matchStartIndex);
+                        }
+
+                        string afterMatch = "";
+                        int matchStopIndex = matchStartIndex + memberNameLower.Length - 1;
+                        int numCharactersAfter = matchLower.Length - 1 - matchStopIndex;
+                        if (numCharactersAfter > 0) // There are characters after @username
+                        {
+                            afterMatch = matchLower.Substring(matchStopIndex + 1, numCharactersAfter);
+                        }
+
+                        return beforeMatch + "<@" + member.Id + ">" + afterMatch; // Add whatever characters came before or after the username when replacing the match in order to avoid changing the message context
+                    }
+                }
+                return match.ToString();
+            });
         }
 
         #endregion
