@@ -476,29 +476,40 @@ namespace Eco.Plugins.DiscordLink
                     return beforeMatch + mention + afterMatch; // Add whatever characters came before or after the username when replacing the match in order to avoid changing the message context
                 };
 
+                ChannelLink link = _configOptions.Config.GetChannelLinkFromDiscordChannel(channel.Guild.Name, channel.Name);
+                bool allowRoleMentions = (link == null ? true : link.AllowRoleMentions);
+                bool allowMemberMentions = (link == null ? true : link.AllowUserMentions);
+                bool allowChannelMentions = (link == null ? true : link.AllowChannelMentions);
+
                 if (capture.ToString()[0] == '@')
                 {
-                    foreach (var role in channel.Guild.Roles) // Checking roles first in case a user has name identiacal to that of a role
+                    if (allowRoleMentions)
                     {
-                        if (!role.IsMentionable) continue;
-
-                        string name = role.Name.ToLower();
-                        if (match.Contains(name))
+                        foreach (var role in channel.Guild.Roles) // Checking roles first in case a user has name identiacal to that of a role
                         {
-                            return FormatMention(name, role.Mention);
+                            if (!role.IsMentionable) continue;
+
+                            string name = role.Name.ToLower();
+                            if (match.Contains(name))
+                            {
+                                return FormatMention(name, role.Mention);
+                            }
                         }
                     }
 
-                    foreach (var member in channel.Guild.Members)
+                    if (allowMemberMentions)
                     {
-                        string name = member.DisplayName.ToLower();
-                        if (match.Contains(name))
+                        foreach (var member in channel.Guild.Members)
                         {
-                            return FormatMention(name, member.Mention);
+                            string name = member.DisplayName.ToLower();
+                            if (match.Contains(name))
+                            {
+                                return FormatMention(name, member.Mention);
+                            }
                         }
                     }
                 }
-                else if(capture.ToString()[0] == '#')
+                else if(capture.ToString()[0] == '#' && allowChannelMentions)
                 {
                     foreach(var listChannel in channel.Guild.Channels)
                     {
@@ -778,6 +789,30 @@ namespace Eco.Plugins.DiscordLink
             };
         }
 
+        public ChannelLink GetChannelLinkFromDiscordChannel(string guild, string channelName)
+        {
+            foreach(ChannelLink channelLink in ChannelLinks)
+            {
+                if(channelLink.DiscordGuild.ToLower() == guild.ToLower() && channelLink.DiscordChannel.ToLower() == channelName.ToLower())
+                {
+                    return channelLink;
+                }
+            }
+            return null;
+        }
+
+        public ChannelLink GetChannelLinkFromEcoChannel(string channelName)
+        {
+            foreach (ChannelLink channelLink in ChannelLinks)
+            {
+                if (channelLink.EcoChannel.ToLower() == channelName.ToLower())
+                {
+                    return channelLink;
+                }
+            }
+            return null;
+        }
+
         [Description("The token provided by the Discord API to allow access to the bot. This setting can be changed while the server is running and will in that case trigger a reconnection to Discord."), Category("Bot Configuration")]
         public string BotToken { get; set; }
 
@@ -866,5 +901,14 @@ namespace Eco.Plugins.DiscordLink
 
         [Description("Eco Channel to use. Case sensitive.")]
         public string EcoChannel { get; set; }
+
+        [Description("Allow mentions of usernames to be forwarded from Eco to the Discord channel")]
+        public bool AllowUserMentions { get; set; } = true;
+
+        [Description("Allow mentions of roles to be forwarded from Eco to the Discord channel")]
+        public bool AllowRoleMentions { get; set; } = true;
+
+        [Description("Allow mentions of channels to be forwarded from Eco to the Discord channel")]
+        public bool AllowChannelMentions { get; set; } = true;
     }
 }
