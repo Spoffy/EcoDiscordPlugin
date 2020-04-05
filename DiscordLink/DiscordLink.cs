@@ -448,38 +448,69 @@ namespace Eco.Plugins.DiscordLink
 
         private string FormatDiscordMentions(string message, DiscordChannel channel)
         {
-            return Regex.Replace(message, "(@.+?)(?=(\\s|$|@))", match => // Mention matching regex: Match all characters followed by an @ character (including that character) until encountering any type of whitespace, end of string or a new @ character
+            return Regex.Replace(message, "([@#].+?)(?=\\s|$|@|#)", capture => // Mention matching regex: Match all characters followed by a mention character(@ or #) character (including that character) until encountering any type of whitespace, end of string or a new mention character
             {
-                string matchLower = match.ToString().Substring(1).ToLower(); // Strip the @ character from the match
-                foreach (var member in channel.Guild.Members)
+                string match = capture.ToString().Substring(1).ToLower(); // Strip the mention character from the match
+                Func<string, string, string> FormatMention = (name, mention) =>
                 {
-                    string memberNameLower = member.DisplayName.ToLower();
-                    if (matchLower.Contains(memberNameLower))
+                    if (match == name)
                     {
-                        if (matchLower == memberNameLower)
-                        {
-                            return "<@" + member.Id + ">";
-                        }
+                        return mention;
+                    }
 
-                        string beforeMatch = "";
-                        int matchStartIndex = matchLower.IndexOf(memberNameLower);
-                        if (matchStartIndex > 0) // There are characters before @username
-                        {
-                            beforeMatch = matchLower.Substring(0, matchStartIndex);
-                        }
+                    string beforeMatch = "";
+                    int matchStartIndex = match.IndexOf(name);
+                    if (matchStartIndex > 0) // There are characters before @username
+                    {
+                        beforeMatch = match.Substring(0, matchStartIndex);
+                    }
 
-                        string afterMatch = "";
-                        int matchStopIndex = matchStartIndex + memberNameLower.Length - 1;
-                        int numCharactersAfter = matchLower.Length - 1 - matchStopIndex;
-                        if (numCharactersAfter > 0) // There are characters after @username
-                        {
-                            afterMatch = matchLower.Substring(matchStopIndex + 1, numCharactersAfter);
-                        }
+                    string afterMatch = "";
+                    int matchStopIndex = matchStartIndex + name.Length - 1;
+                    int numCharactersAfter = match.Length - 1 - matchStopIndex;
+                    if (numCharactersAfter > 0) // There are characters after @username
+                    {
+                        afterMatch = match.Substring(matchStopIndex + 1, numCharactersAfter);
+                    }
+                    
+                    return beforeMatch + mention + afterMatch; // Add whatever characters came before or after the username when replacing the match in order to avoid changing the message context
+                };
 
-                        return beforeMatch + "<@" + member.Id + ">" + afterMatch; // Add whatever characters came before or after the username when replacing the match in order to avoid changing the message context
+                if (capture.ToString()[0] == '@')
+                {
+                    foreach (var role in channel.Guild.Roles) // Checking roles first in case a user has name identiacal to that of a role
+                    {
+                        if (!role.IsMentionable) continue;
+
+                        string name = role.Name.ToLower();
+                        if (match.Contains(name))
+                        {
+                            return FormatMention(name, role.Mention);
+                        }
+                    }
+
+                    foreach (var member in channel.Guild.Members)
+                    {
+                        string name = member.DisplayName.ToLower();
+                        if (match.Contains(name))
+                        {
+                            return FormatMention(name, member.Mention);
+                        }
                     }
                 }
-                return match.ToString();
+                else if(capture.ToString()[0] == '#')
+                {
+                    foreach(var listChannel in channel.Guild.Channels)
+                    {
+                        string name = listChannel.Name.ToLower();
+                        if(match.Contains(name))
+                        {
+                            return FormatMention(name, listChannel.Mention);
+                        }
+                    }
+                }
+
+                return capture.ToString(); // No match found, just return the original string
             });
         }
 
