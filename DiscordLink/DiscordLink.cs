@@ -217,7 +217,7 @@ namespace Eco.Plugins.DiscordLink
         
         public DiscordGuild GuildByName(string name)
         {
-            return _discordClient.GuildByName(name);
+            return _discordClient?.Guilds.Values.FirstOrDefault(guild => guild.Name.ToLower() == name.ToLower());
         }
 
         public DiscordGuild GuildByNameOrId(string nameOrId)
@@ -562,7 +562,20 @@ namespace Eco.Plugins.DiscordLink
                 RestartClient();
             }
 
-            if(_configOptions.Config.LogChat && !_prevConfigOptions.LogChat)
+            foreach (ChannelLink link in _configOptions.Config.ChannelLinks)
+            {
+                if (link.DiscordChannel != link.DiscordChannel.ToLower()) // Discord channels are always lowercase
+                {
+                    link.DiscordChannel = link.DiscordChannel.ToLower();
+                }
+
+                if(link.DiscordChannel.Contains(' ')) // Discord channels always replace spaces with dashes
+                {
+                    link.DiscordChannel = link.DiscordChannel.Replace(' ', '-');
+                }
+            }
+
+            if (_configOptions.Config.LogChat && !_prevConfigOptions.LogChat)
             {
                 Logger.Info("Chatlog enabled");
                 StartChatlog();
