@@ -527,7 +527,7 @@ namespace Eco.Plugins.DiscordLink
                     var channel = guild.ChannelByNameOrId(link.DiscordChannel);
                     if (channel == null)
                     {
-                        errorMessages.Add("[Channel Links] No Channel with the name \"" + link.DiscordGuild + "\" could be found in the Guild \"" + link.DiscordGuild + "\"" );
+                        errorMessages.Add("[Channel Links] No Channel with the name \"" + link.DiscordChannel + "\" could be found in the Guild \"" + link.DiscordGuild + "\"" );
                     }
                 }
             }
