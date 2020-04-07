@@ -27,7 +27,6 @@ namespace Eco.Plugins.DiscordLink
     public class DiscordLink : IModKitPlugin, IInitializablePlugin, IConfigurablePlugin
     {
         public const string InviteCommandLinkToken = "[LINK]";
-        public const string DiscordCommandPrefix = "?";
         protected string NametagColor = "7289DAFF";
         private PluginConfig<DiscordConfig> _configOptions;
         private DiscordConfig _prevConfigOptions; // Used to detect differances when the config is saved
@@ -147,7 +146,7 @@ namespace Eco.Plugins.DiscordLink
                 // Set up the client to use CommandsNext
                 _commands = _discordClient.UseCommandsNext(new CommandsNextConfiguration
                 {
-                    StringPrefix = DiscordCommandPrefix
+                    StringPrefix = _configOptions.Config.DiscordCommandPrefix
                 });
 
                 _commands.RegisterCommands<DiscordDiscordCommands>();
@@ -360,7 +359,7 @@ namespace Eco.Plugins.DiscordLink
         {
             LogDiscordMessage(message);
             if (message.Author == _discordClient.CurrentUser) { return; }
-            if (message.Content.StartsWith(DiscordCommandPrefix)) { return; }
+            if (message.Content.StartsWith(_configOptions.Config.DiscordCommandPrefix)) { return; }
             
             var channelLink = GetLinkForEcoChannel(message.Channel.Name) ?? GetLinkForEcoChannel(message.Channel.Id.ToString());
             var channel = channelLink?.EcoChannel;
@@ -560,6 +559,17 @@ namespace Eco.Plugins.DiscordLink
                 //Reinitialise client.
                 Logger.Info("Discord Token changed, reinitialising client.\n");
                 RestartClient();
+            }
+
+            // Discord Command Prefix
+            if (_configOptions.Config.DiscordCommandPrefix != _prevConfigOptions.DiscordCommandPrefix)
+            {
+                if (string.IsNullOrEmpty(_configOptions.Config.DiscordCommandPrefix))
+                {
+                    _configOptions.Config.DiscordCommandPrefix = DiscordConfig.DefaultValues.DiscordCommandPrefix;
+                }
+
+                Logger.Info("Command prefix changed - Restart required to take effect");
             }
 
             foreach (ChannelLink link in _configOptions.Config.ChannelLinks)
@@ -781,6 +791,7 @@ namespace Eco.Plugins.DiscordLink
     {
         public static class DefaultValues
         {
+            public const string DiscordCommandPrefix = "?";
             public const string EcoCommandChannel = "General";
             public const string InviteMessage = "Join us on Discord!\n" + DiscordLink.InviteCommandLinkToken;
         }
@@ -825,6 +836,9 @@ namespace Eco.Plugins.DiscordLink
             }
             return null;
         }
+
+        [Description("The prefix to put before commands in order for the Discord bot to recognize them as such. This setting requires a restart to take effect."), Category("Command Settings")]
+        public string DiscordCommandPrefix { get; set; } = DefaultValues.DiscordCommandPrefix;
 
         [Description("The token provided by the Discord API to allow access to the bot. This setting can be changed while the server is running and will in that case trigger a reconnection to Discord."), Category("Bot Configuration")]
         public string BotToken { get; set; }
