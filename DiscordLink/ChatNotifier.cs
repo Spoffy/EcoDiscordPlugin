@@ -16,7 +16,7 @@ namespace Eco.Plugins.DiscordLink
 
         private IChatMessageProvider chatMessageProvider;
         
-        private double lastCheckTime = Double.MaxValue;
+        private double _lastCheckTime = Double.MaxValue;
         private const int POLL_DELAY = 500;
 
         public ChatNotifier(IChatMessageProvider chatMessageProvider)
@@ -26,16 +26,15 @@ namespace Eco.Plugins.DiscordLink
 
         public void Initialize()
         {
-            lastCheckTime = WorldTime.Seconds;
+            _lastCheckTime = WorldTime.Seconds;
         }
 
         public void ProcessMessagesAfterTime(double startTime)
         {
-            var newMessages = chatMessageProvider.GetChatMessages(lastCheckTime);
+            var newMessages = chatMessageProvider.GetChatMessages(startTime);
             
             newMessages.ForEach(message =>
             {
-                //Log.Write("Message found, invoking callback.");
                 OnMessageReceived.Invoke(message);
             });
         }
@@ -44,8 +43,8 @@ namespace Eco.Plugins.DiscordLink
         {
             while (true)
             {
-                var getMessagesAfterTime = lastCheckTime;
-                lastCheckTime = WorldTime.Seconds;
+                var getMessagesAfterTime = _lastCheckTime;
+                _lastCheckTime = WorldTime.Seconds;
                 
                 ProcessMessagesAfterTime(getMessagesAfterTime);
                 
