@@ -153,8 +153,8 @@ namespace Eco.Plugins.DiscordLink
                 }
                 
                 inviteMessage = Regex.Replace(inviteMessage, Regex.Escape(DiscordLink.InviteCommandLinkToken), serverInfo.DiscordAddress);
-                string formattedMessage = $"#{config.EcoCommandChannel} {inviteMessage}";
-                ChatManager.SendChat(formattedMessage, plugin.EcoUser);
+                string formattedInviteMessage = $"#{config.EcoCommandChannel} {inviteMessage}";
+                ChatManager.SendChat(formattedInviteMessage, plugin.EcoUser);
             },
             user);
         }
