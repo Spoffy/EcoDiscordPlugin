@@ -53,9 +53,6 @@
     <Reference Include="Eco.Gameplay">
       <HintPath>..\EcoDependencies\Eco.Gameplay.dll</HintPath>
     </Reference>
-    <Reference Include="Eco.ModKit">
-      <HintPath>..\EcoDependencies\Eco.ModKit.dll</HintPath>
-    </Reference>
     <Reference Include="Eco.Plugins">
       <HintPath>..\EcoDependencies\Eco.Plugins.dll</HintPath>
     </Reference>
@@ -64,15 +61,6 @@
     </Reference>
     <Reference Include="Eco.Simulation">
       <HintPath>..\EcoDependencies\Eco.Simulation.dll</HintPath>
-    </Reference>
-    <Reference Include="Eco.Stats">
-      <HintPath>..\EcoDependencies\Eco.Stats.dll</HintPath>
-    </Reference>
-    <Reference Include="Eco.World">
-      <HintPath>..\EcoDependencies\Eco.World.dll</HintPath>
-    </Reference>
-    <Reference Include="Eco.WorldGenerator">
-      <HintPath>..\EcoDependencies\Eco.WorldGenerator.dll</HintPath>
     </Reference>
   </ItemGroup>
   
