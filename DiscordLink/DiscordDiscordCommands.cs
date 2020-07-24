@@ -51,7 +51,8 @@ namespace Eco.Plugins.DiscordLink
                 LogCommandException(e);
             }
         }
-        
+
+#if DEBUG
         [Command("debug")]
         [Description("Runs the current debugging command.")]
         public async Task Debug(CommandContext ctx)
@@ -83,6 +84,7 @@ namespace Eco.Plugins.DiscordLink
                 LogCommandException(e);
             }
         }
+#endif
 
         [Command("echo")]
         [Description("Sends the provided message to Eco and back to Discord again.")]
