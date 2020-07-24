@@ -12,7 +12,6 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
-using DSharpPlus.Net.WebSocket;
 using Eco.Core;
 using Eco.Core.Plugins;
 using Eco.Core.Plugins.Interfaces;
@@ -157,7 +156,6 @@ namespace Eco.Plugins.DiscordLink
                     Token = _currentToken,
                     TokenType = TokenType.Bot
                 });
-                //_discordClient.SetWebSocketClient<WebSocket4NetClient>();
 
                 _discordClient.Ready += async args => { Logger.Info("Connected and Ready"); };
                 _discordClient.ClientErrored += async args => { Logger.Error(args.EventName + " " + args.Exception.ToString()); };
