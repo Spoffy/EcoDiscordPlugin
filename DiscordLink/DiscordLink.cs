@@ -33,7 +33,7 @@ namespace Eco.Plugins.DiscordLink
         private DiscordConfig _prevConfigOptions; // Used to detect differences when the config is saved
         private DiscordClient _discordClient;
         private CommandsNextExtension _commands;
-        private string _currentToken;
+        private string _currentBotToken;
         private string _status = "No Connection Attempt Made";
 
         private static readonly Regex TagStripRegex = new Regex("<[^>]*>"); // Strips the tags used by Eco message formatting (color codes, badges, links etc)
@@ -143,7 +143,7 @@ namespace Eco.Plugins.DiscordLink
             DisposeOfClient();
             _status = "Setting up client";
             // Loading the configuration
-            _currentToken = String.IsNullOrWhiteSpace(DiscordPluginConfig.BotToken)
+            _currentBotToken = String.IsNullOrWhiteSpace(DiscordPluginConfig.BotToken)
                 ? "ThisTokenWillNeverWork" // Whitespace isn't allowed, and it should trigger an obvious authentication error rather than crashing.
                 : DiscordPluginConfig.BotToken;
 
@@ -153,7 +153,7 @@ namespace Eco.Plugins.DiscordLink
                 _discordClient = new DiscordClient(new DiscordConfiguration
                 {
                     AutoReconnect = true,
-                    Token = _currentToken,
+                    Token = _currentBotToken,
                     TokenType = TokenType.Bot
                 });
 
@@ -730,7 +730,7 @@ namespace Eco.Plugins.DiscordLink
         protected bool SaveConfig() // Returns true if no correction was needed
         {
             bool correctionMade = false;
-            if (DiscordPluginConfig.BotToken != _currentToken)
+            if (DiscordPluginConfig.BotToken != _currentBotToken)
             {
                 //Reinitialise client.
                 Logger.Info("Discord Token changed, reinitialising client.");
