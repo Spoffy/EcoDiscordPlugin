@@ -27,6 +27,7 @@ namespace Eco.Plugins.DiscordLink
     public class DiscordLink : IModKitPlugin, IInitializablePlugin, IConfigurablePlugin, IShutdownablePlugin
     {
         public const string InviteCommandLinkToken = "[LINK]";
+        public const string EchoCommandToken = "[ECHO]";
         public ThreadSafeAction<object, string> ParamChanged { get; set; }
         protected string NametagColor = "7289DAFF";
         private PluginConfig<DiscordConfig> _configOptions;
@@ -348,7 +349,12 @@ namespace Eco.Plugins.DiscordLink
         public void OnMessageReceivedFromEco(ChatMessage message)
         {
             LogEcoMessage(message);
-            if (message.Sender == EcoUser.Name) { return; } // Ignore messages sent by our bot 
+
+            // Ignore messages sent by our bot
+            if (message.Sender == EcoUser.Name && !message.Text.StartsWith(EchoCommandToken))
+            {
+                return;
+            }
 
             // Handle messages sent by the server
             if (String.IsNullOrWhiteSpace(message.Sender))
