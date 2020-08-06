@@ -42,7 +42,7 @@ See the [installation guide](Installation.md)
 
 3. Enter the parameters for the Eco status Discord Channel. _"DiscordChannel"_ should be the Discord channel you want the status message to be posted in. For example, "eco-status". _"DiscordGuild"_ is the name of the Discord Server, for example "Eco" for the official Eco Discord. Both _DiscordChannel_ and _DiscordGuild_ accept names or IDs. Once entered, hit "OK".  
 **Optional**: Configure the usage flags according to your preferences.  
-**Note**: The Eco status message is continiously being rewritten by DiscordLink. It should be the top message in its channel and the message should not be removed.
+**Note**: The Eco Status message is kept updated by repeatedly modifying the first Discord Eco Status message. This means that the Discord bot needs permission to manage messages in the chosen channel or the message will not be updated.
 
 ![Opening Collection Window](images/configuration/ecostatus/3.png)
 
