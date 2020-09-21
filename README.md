@@ -1,3 +1,7 @@
+# Notice!
+DiscordLink development has been moved to a [new organization repository]( https://github.com/Eco-DiscordLink/EcoDiscordPlugin).
+Issues, development and releases should all be handled in the linked repository.
+
 ![DiscordLink Logo](images/DiscordLinkLogo_Nameless_Small.png)
 # DiscordLink
 
