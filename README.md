@@ -1,4 +1,4 @@
-# Notice!  
+# Notice - REPOSITORY HAS MOVED! THIS ONE IS OUTDATED AND DOES NOT WORK WITH THE CURRENT VERSION OF ECO!  
 DiscordLink development has been moved to a [new organization repository]( https://github.com/Eco-DiscordLink/EcoDiscordPlugin).  
 Issues, development and releases should all be handled in the linked repository.  
 
