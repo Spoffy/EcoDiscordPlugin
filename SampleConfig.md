@@ -1,4 +1,4 @@
-<{  
+{  
   "PlayerConfigs": [],  
   "BotToken": "NjggMDg3MjI1OTg2MDg5MDQx.Xlmuqw.ZYhFUjNFZ8IUYQTR7ng2CxFAy4Q",  
   "DiscordCommandPrefix": "?",  
